@@ -79,7 +79,7 @@ function log() {
 
 function check_version() {
     current=$(cat version)
-    latest=$(curl -s https://raw.githubusercontent.com/xaner4/kubeenvsetup/main/version)
+    latest=$(curl -s https://raw.githubusercontent.com/xaner4/kube-env/main/version)
     if [[ ${latest} -gt ${current} ]]; then
         log notice "New version available\n\tcurrent: ${RED}v${current}${RESET}\n\t${BLUE}latest:${RESET}  ${GREEN}v${latest}${RESET}"
         exit 1
