@@ -40,6 +40,7 @@ YELLOW='\033[0;33m'
 RESET='\033[0m'
 
 function main() {
+    check_version
     if [[ ! -d ${bin} ]]; then
         mkdir -p ${bin}
     fi
@@ -74,6 +75,15 @@ function log() {
             ;;
     esac
 
+}
+
+function check_version() {
+    current=$(cat version)
+    latest=$(curl -s https://raw.githubusercontent.com/xaner4/kubeenvsetup/main/version)
+    if [[ ${latest} -gt ${current} ]]; then
+        log notice "New version available\n\tcurrent: ${RED}v${current}${RESET}\n\t${BLUE}latest:${RESET}  ${GREEN}v${latest}${RESET}"
+        exit 1
+    fi
 }
 
 function download() {
@@ -126,31 +136,37 @@ function unpack() {
 
 function kubectl_install() {
     download ${kubectl_download_url}
+    validate_checksum ${kubectl_checksum}
     mv ${assets}/$(basename ${kubectl_download_url}) ./bin/
 }
 
 function helm_install() {
     download ${helm_download_url}
+    validate_checksum ${helm_checksum}
     unpack ${helm_download_url} 1 "${os,,}-${hardware_map[${hardware}]}/helm"
 }
 
 function kubectx_install() {
     download ${kubectx_download_url}
+    validate_checksum ${kubectx_checksum}
     unpack ${kubectx_download_url} 0 kubectx
 }
 
 function kubens_install() {
     download ${kubens_download_url}
+    validate_checksum ${kubens_checksum}
     unpack ${kubens_download_url} 0 kubens
 }
 
 function kubeseal_install() {
     download ${kubeseal_download_url}
+    validate_checksum ${kubeseal_checksum}
     unpack ${kubeseal_download_url} 0 kubeseal
 }
 
 function kustomize_install() {
     download ${kustomize_download_url}
+    validate_checksum ${kustomize_checksum}
     unpack ${kustomize_download_url} 0 kustomize
 }
 
