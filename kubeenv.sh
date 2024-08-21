@@ -9,37 +9,9 @@ declare -A hardware_map
 hardware_map["x86_64"]="amd64"
 hardware_map["arm64"]="arm64"
 
-kubectl_version="$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)"
-kubectl_download_url="https://dl.k8s.io/${kubectl_version}/bin/${os,,}/${hardware_map[${hardware}]}/kubectl"
-kubectl_checksum="https://dl.k8s.io/${kubectl_version}/bin/${os,,}/${hardware_map[${hardware}]}/kubectl.sha256"
-
-helm_version="3.15.3"
-helm_download_url="https://get.helm.sh/helm-v${helm_version}-${os,,}-${hardware_map[${hardware}]}.tar.gz"
-helm_checksum="https://get.helm.sh/helm-v${helm_version}-${os,,}-${hardware_map[${hardware}]}.tar.gz.sha256sum"
-
-kubectx_version="0.9.5"
-kubectx_download_url="https://github.com/ahmetb/kubectx/releases/download/v${kubectx_version}/kubectx_v${kubectx_version}_${os,,}_${hardware}.tar.gz"
-kubectx_checksum="https://github.com/ahmetb/kubectx/releases/download/v${kubectx_version}/checksums.txt"
-
-kubens_version="0.9.5"
-kubens_download_url="https://github.com/ahmetb/kubectx/releases/download/v${kubens_version}/kubens_v${kubens_version}_${os,,}_${hardware}.tar.gz"
-kubens_checksum="https://github.com/ahmetb/kubectx/releases/download/v${kubens_version}/checksums.txt"
-
-kubeseal_version="0.27.1"
-kubeseal_download_url="https://github.com/bitnami-labs/sealed-secrets/releases/download/v${kubeseal_version}/kubeseal-${kubeseal_version}-${os,,}-${hardware_map[${hardware}]}.tar.gz"
-kubeseal_checksum="https://github.com/bitnami-labs/sealed-secrets/releases/download/v${kubeseal_version}/sealed-secrets_${kubeseal_version}_checksums.txt"
-
-Kustomize_version="5.4.3"
-kustomize_download_url="https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${Kustomize_version}/kustomize_v${Kustomize_version}_${os,,}_${hardware_map[${hardware}]}.tar.gz"
-kustomize_checksum="https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${Kustomize_version}/checksums.txt"
-
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[0;33m'
-RESET='\033[0m'
-
 function main() {
+    source log.sh
+    source kubeenv_software.sh
     check_version
     if [[ ! -d ${bin} ]]; then
         mkdir -p ${bin}
@@ -48,33 +20,15 @@ function main() {
         mkdir -p ${assets}
     fi
 
+    oc_install
     kubectl_install
+    k9s_install
     helm_install
     kubectx_install
     kubens_install
     kubeseal_install
     kustomize_install
-}
-
-
-function log() {
-    loglevel=${1,,}
-    msg=${2}
-    case ${loglevel} in
-        info)
-            echo -e "${GREEN}[+] ${msg}${RESET}"
-            ;;
-        notice)
-            echo -e "${BLUE}[*] ${msg}${RESET}"
-            ;;
-        warn)
-            echo -e "${YELLOW}[!] ${msg}${RESET}"
-            ;;
-        error)
-            echo -e "${RED}[-] ${msg}${RESET}"
-            ;;
-    esac
-
+    yq_install
 }
 
 function check_version() {
@@ -118,7 +72,7 @@ function unpack() {
     fi
     case "${archive}" in
         *.tar.gz)
-            tar --strip-components=${sublevel} -xzf  "${archive}" -C "${bin}" ${files}
+            tar --strip-components=${sublevel} -xzf "${archive}" -C "${bin}" ${files}
         ;;
         *)
             log error "Not an know archive format"
@@ -127,17 +81,26 @@ function unpack() {
     
 
     if [[ $? -gt 0 ]]; then
-        log warn "Not possible to unarchive ${assets}/${archive}"
+        log warn "Not possible to unarchive ${archive}"
         return
     else
         log info "${files} has been successfully packed out from ${archive}"
     fi
 }
 
+function oc_install(){
+    unpack ${oc_download_url} 0 kubectl oc
+}
+
 function kubectl_install() {
     download ${kubectl_download_url}
-    mv ${assets}/$(basename ${kubectl_download_url}) ${bin}
+    cp ${assets}/$(basename ${kubectl_download_url}) ${bin}
     chmod +x ${bin}/$(basename ${kubectl_download_url})
+}
+
+function k9s_install() {
+    download ${k9s_download_url}
+    unpack ${k9s_download_url} 0 k9s
 }
 
 function helm_install() {
@@ -165,4 +128,8 @@ function kustomize_install() {
     unpack ${kustomize_download_url} 0 kustomize
 }
 
+function yq_install() {
+    download ${yq_download_url}
+    unpack ${yq_download_url} 0 ./yq_${os,,}_${hardware_map[${hardware}]}
+}
 main
