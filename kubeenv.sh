@@ -20,7 +20,6 @@ function main() {
         mkdir -p ${assets}
     fi
 
-    oc_install
     kubectl_install
     k9s_install
     helm_install
@@ -86,10 +85,6 @@ function unpack() {
     else
         log info "${files} has been successfully packed out from ${archive}"
     fi
-}
-
-function oc_install(){
-    unpack ${oc_download_url} 0 kubectl oc
 }
 
 function kubectl_install() {

@@ -1,9 +1,5 @@
 #!/bin/bash
 
-oc_version="4.16.7"
-oc_version_page=""
-oc_download_url="${assets}/oc-${oc_version}-${os,,}.tar.gz"
-
 kubectl_version="$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)"
 kubectl_version_page="https://storage.googleapis.com/kubernetes-release/release/stable.txt"
 kubectl_download_url="https://dl.k8s.io/${kubectl_version}/bin/${os,,}/${hardware_map[${hardware}]}/kubectl"
