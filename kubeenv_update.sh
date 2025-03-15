@@ -4,14 +4,16 @@ function main() {
     source log.sh
     source kubeenv_software.sh
 
-    github_release_tag "helm"
+    github_release_tag "yq"
+    github_release_tag "jq"
+    github_release_tag "gh"
     github_release_tag "k9s"
     github_release_tag "helm"
-    github_release_tag "kubectx"
     github_release_tag "kubens"
+    github_release_tag "kubectx"
+    github_release_tag "kompose"
     github_release_tag "kubeseal"
     github_release_tag "kustomize"
-    github_release_tag "yq"
 }
 
 function github_release_tag() {
@@ -32,6 +34,7 @@ function github_release_tag() {
     fi
 
     update_version "${software_name}" "${latest}"
+    log info "${software_name} has been updated from '${current_version}' -> '${latest}'"
 }
 
 function update_version() {
