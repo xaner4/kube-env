@@ -4,6 +4,7 @@ assets="./assets"
 bin="./bin"
 
 os=$(uname)
+
 hardware=$(uname -m)
 declare -A hardware_map
 hardware_map["x86_64"]="amd64"
@@ -12,7 +13,7 @@ hardware_map["arm64"]="arm64"
 function main() {
     source log.sh
     source kubeenv_software.sh
-    check_version
+    
     if [[ ! -d ${bin} ]]; then
         mkdir -p ${bin}
     fi
@@ -20,23 +21,18 @@ function main() {
         mkdir -p ${assets}
     fi
 
-    kubectl_install
+    gh_install
+    yq_install
+    jq_install
     k9s_install
     helm_install
-    kubectx_install
     kubens_install
+    kubectl_install
+    kompose_install
+    kubectx_install
     kubeseal_install
     kustomize_install
-    yq_install
-}
 
-function check_version() {
-    current=$(cat version)
-    latest=$(curl -s https://raw.githubusercontent.com/xaner4/kube-env/main/version)
-    if [[ ${latest} -gt ${current} ]]; then
-        log notice "New version available\n\tcurrent: ${RED}v${current}${RESET}\n\t${BLUE}latest:${RESET}  ${GREEN}v${latest}${RESET}"
-        exit 1
-    fi
 }
 
 function download() {
@@ -93,6 +89,23 @@ function kubectl_install() {
     chmod +x ${bin}/$(basename ${kubectl_download_url})
 }
 
+function yq_install() {
+    download ${yq_download_url}
+    unpack ${yq_download_url} 0 ./yq_${os,,}_${hardware_map[${hardware}]}
+    mv ${bin}/yq_${os,,}_${hardware_map[${hardware}]} ${bin}/yq
+}
+
+function gh_install() {
+    download ${gh_download_url}
+    unpack ${gh_download_url} 2 gh_${gh_version}_${os,,}_${hardware_map[${hardware}]}/bin/gh
+}
+
+function jq_install() {
+    download ${jq_download_url}
+    mv ${assets}/jq-${os,,}-${hardware_map[${hardware}]} ${bin}/jq
+    chmod +x ${bin}/jq
+}
+
 function k9s_install() {
     download ${k9s_download_url}
     unpack ${k9s_download_url} 0 k9s
@@ -123,8 +136,10 @@ function kustomize_install() {
     unpack ${kustomize_download_url} 0 kustomize
 }
 
-function yq_install() {
-    download ${yq_download_url}
-    unpack ${yq_download_url} 0 ./yq_${os,,}_${hardware_map[${hardware}]}
+function kompose_install() {
+    download ${kompose_download_url}
+    mv ${assets}/kompose-${os,,}-${hardware_map[${hardware}]} ${bin}/kompose
+    chmod +x ${bin}/kompose
 }
+
 main
